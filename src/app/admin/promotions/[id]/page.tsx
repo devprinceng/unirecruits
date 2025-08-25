@@ -1,19 +1,68 @@
 "use client";
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { promotions, users } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Calendar, User, Briefcase, ArrowRight, TrendingUp, BadgeCheck, ShieldX } from 'lucide-react';
+import { Calendar, Briefcase, ArrowRight, TrendingUp, BadgeCheck, ShieldX } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { fetchPromotionById, updatePromotionStatus } from '@/lib/api';
+import type { Promotion, User } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminPromotionDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { toast } = useToast();
   const id = params.id as string;
-  const promotion = promotions.find((p) => p.id === id);
-  const staffMember = users.find(u => u.id === promotion?.staffId);
+  
+  const [promotion, setPromotion] = useState<Promotion | null>(null);
+  const [staffMember, setStaffMember] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadPromotion() {
+      try {
+        const promoData = await fetchPromotionById(id);
+        setPromotion(promoData.promotion);
+        setStaffMember(promoData.staffMember);
+      } catch (error) {
+        toast({ title: "Error", description: "Could not load promotion details.", variant: "destructive" });
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (id) {
+      loadPromotion();
+    }
+  }, [id, toast]);
+
+  const handleStatusUpdate = async (status: 'approved' | 'rejected') => {
+    if (!promotion) return;
+    try {
+        const updatedPromotion = await updatePromotionStatus(promotion.id, status);
+        setPromotion(updatedPromotion);
+        toast({
+            title: `Request ${status}`,
+            description: `The promotion request has been ${status}.`
+        });
+    } catch (error) {
+         toast({
+            title: "Error",
+            description: "Failed to update promotion status.",
+            variant: "destructive"
+        });
+    }
+  };
+
+  const getInitials = (firstName: string = '', lastName: string = '') => {
+    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`;
+  }
+
+  if (loading) {
+    return <div className="container mx-auto px-4 py-12 md:px-6 text-center">Loading promotion details...</div>;
+  }
 
   if (!promotion || !staffMember) {
     return (
@@ -23,10 +72,6 @@ export default function AdminPromotionDetailPage() {
         <Button onClick={() => router.push('/admin/dashboard')} className="mt-4">Back to Dashboard</Button>
       </div>
     );
-  }
-  
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName[0]}${lastName[0]}`;
   }
 
   return (
@@ -98,8 +143,8 @@ export default function AdminPromotionDetailPage() {
         </CardContent>
          {promotion.status === 'pending' && (
             <CardFooter className="flex justify-end gap-2">
-                <Button variant="destructive"><ShieldX className="mr-2"/> Reject</Button>
-                <Button className="bg-green-600 hover:bg-green-700"><BadgeCheck className="mr-2"/> Approve</Button>
+                <Button variant="destructive" onClick={() => handleStatusUpdate('rejected')}><ShieldX className="mr-2"/> Reject</Button>
+                <Button className="bg-green-600 hover:bg-green-700" onClick={() => handleStatusUpdate('approved')}><BadgeCheck className="mr-2"/> Approve</Button>
             </CardFooter>
         )}
       </Card>

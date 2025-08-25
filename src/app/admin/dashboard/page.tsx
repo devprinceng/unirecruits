@@ -11,14 +11,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { applications, promotions, recruitments, users } from "@/lib/data";
 import type { Recruitment, User, Application, Promotion } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
-import { SkillClassifier } from "@/components/skill-classifier";
 import { PlusCircle, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-
+import { fetchRecruitments, fetchApplications, fetchPromotions, fetchUsers, createRecruitment, createUser, updateApplicationStatus } from "@/lib/api";
 
 export default function AdminDashboard() {
   const { user, loading } = useAuth();
@@ -29,14 +27,20 @@ export default function AdminDashboard() {
   const [openNewRecruitmentDialog, setOpenNewRecruitmentDialog] = useState(false);
   const [openAddStaffDialog, setOpenAddStaffDialog] = useState(false);
 
+  // Data states
+  const [recruitments, setRecruitments] = useState<Recruitment[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+
   // Form state for new recruitment
   const [newRecruitmentTitle, setNewRecruitmentTitle] = useState('');
   const [newRecruitmentDept, setNewRecruitmentDept] = useState('');
   const [newRecruitmentDesc, setNewRecruitmentDesc] = useState('');
-  const [classifiedSkills, setClassifiedSkills] = useState<string[]>([]);
-  
+  const [newRecruitmentReqs, setNewRecruitmentReqs] = useState('');
+
    // Form state for new staff
-  const [newStaff, setNewStaff] = useState({
+  const [newStaff, setNewStaff] = useState<Partial<User>>({
     firstName: '',
     lastName: '',
     email: '',
@@ -44,9 +48,9 @@ export default function AdminDashboard() {
     phone: '',
     department: '',
     designation: '',
-    role: 'staff' as 'staff' | 'admin',
+    role: 'staff',
     dateOfEmployment: '',
-    promotionStatus: 'Eligible' as 'Eligible' | 'Promoted' | 'Not Eligible' | 'Top Level',
+    promotionStatus: 'Eligible',
     currentLevel: '',
   });
 
@@ -56,53 +60,100 @@ export default function AdminDashboard() {
       router.push('/auth/login');
     }
   }, [user, loading, router]);
-  
-  const handleAddStaffChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+
+  useEffect(() => {
+    async function loadData() {
+        setRecruitments(await fetchRecruitments());
+        setApplications(await fetchApplications());
+        setPromotions(await fetchPromotions());
+        setUsers(await fetchUsers());
+    }
+    if(user?.role === 'admin') {
+      loadData();
+    }
+  }, [user]);
+
+  const handleAddStaffChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setNewStaff(prev => ({ ...prev, [id]: value }));
   };
 
   const handleAddStaffSelectChange = (id: string, value: string) => {
-    setNewStaff(prev => ({ ...prev, [id]: value }));
+    setNewStaff(prev => ({ ...prev, [id]: value as any }));
   };
 
 
-  const handleCreateRecruitment = () => {
-    // In a real app, you'd send this to an API
-    console.log({
+  const handleCreateRecruitment = async () => {
+    const newRec: Omit<Recruitment, 'id' | 'status'> = {
       title: newRecruitmentTitle,
       department: newRecruitmentDept,
       description: newRecruitmentDesc,
-      requirements: classifiedSkills
-    });
+      requirements: newRecruitmentReqs.split('\\n'),
+      closingDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0] // Default 30 days
+    };
 
-    toast({
-      title: "Recruitment Created",
-      description: `${newRecruitmentTitle} has been posted.`,
-    });
+    try {
+        const created = await createRecruitment(newRec);
+        setRecruitments(prev => [created, ...prev]);
+        toast({
+          title: "Recruitment Created",
+          description: `${created.title} has been posted.`,
+        });
+        setOpenNewRecruitmentDialog(false);
+        // Reset form
+        setNewRecruitmentTitle('');
+        setNewRecruitmentDept('');
+        setNewRecruitmentDesc('');
+        setNewRecruitmentReqs('');
+    } catch (error) {
+        toast({
+            title: "Error",
+            description: "Failed to create recruitment.",
+            variant: "destructive"
+        });
+    }
+  }
 
-    // Reset form and close dialog
-    setNewRecruitmentTitle('');
-    setNewRecruitmentDept('');
-    setNewRecruitmentDesc('');
-    setClassifiedSkills([]);
-    setOpenNewRecruitmentDialog(false);
+  const handleAddStaff = async () => {
+    try {
+        const created = await createUser(newStaff);
+        setUsers(prev => [created, ...prev]);
+        toast({
+            title: "Staff Added",
+            description: `${created.firstName} ${created.lastName} has been added to the system.`,
+        });
+        setOpenAddStaffDialog(false);
+        // Reset form
+        setNewStaff({
+            firstName: '', lastName: '', email: '', password: '', phone: '',
+            department: '', designation: '', role: 'staff', dateOfEmployment: '',
+            promotionStatus: 'Eligible', currentLevel: '',
+        });
+    } catch (error) {
+         toast({
+            title: "Error",
+            description: "Failed to add staff.",
+            variant: "destructive"
+        });
+    }
   }
-  
-  const handleAddStaff = () => {
-    console.log(newStaff);
-    toast({
-        title: "Staff Added",
-        description: `${newStaff.firstName} ${newStaff.lastName} has been added to the system.`,
-    });
-    setOpenAddStaffDialog(false);
-    // Reset form
-    setNewStaff({
-        firstName: '', lastName: '', email: '', password: '', phone: '',
-        department: '', designation: '', role: 'staff', dateOfEmployment: '',
-        promotionStatus: 'Eligible', currentLevel: '',
-    });
-  }
+
+  const handleApplicationStatusChange = async (appId: string, status: Application['status']) => {
+    try {
+        await updateApplicationStatus(appId, status);
+        setApplications(prev => prev.map(app => app.id === appId ? {...app, status} : app));
+        toast({
+            title: "Status Updated",
+            description: "Application status has been updated.",
+        });
+    } catch (error) {
+        toast({
+            title: "Error",
+            description: "Failed to update status.",
+            variant: "destructive"
+        });
+    }
+  };
 
 
   if (loading || !user || user.role !== 'admin') {
@@ -112,8 +163,6 @@ export default function AdminDashboard() {
   if (!isClient) {
     return null;
   }
-  
-  const staffMembers = users.filter(u => u.role === 'staff');
 
   return (
     <div className="container mx-auto px-4 py-12 md:px-6">
@@ -145,7 +194,7 @@ export default function AdminDashboard() {
                   <DialogHeader>
                     <DialogTitle>Create New Recruitment</DialogTitle>
                     <DialogDescription>
-                      Fill in the details for the new job opening. Use the AI tool to classify skills.
+                      Fill in the details for the new job opening.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
@@ -157,12 +206,15 @@ export default function AdminDashboard() {
                       <Label htmlFor="department" className="text-right">Department</Label>
                       <Input id="department" value={newRecruitmentDept} onChange={e => setNewRecruitmentDept(e.target.value)} className="col-span-3" />
                     </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="description" className="text-right">Description</Label>
+                      <Input id="description" value={newRecruitmentDesc} onChange={e => setNewRecruitmentDesc(e.target.value)} className="col-span-3" />
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="requirements" className="text-right">Requirements</Label>
+                      <Input id="requirements" value={newRecruitmentReqs} onChange={e => setNewRecruitmentReqs(e.target.value)} className="col-span-3" placeholder="Enter one per line"/>
+                    </div>
                   </div>
-                  <SkillClassifier 
-                    jobDescription={newRecruitmentDesc}
-                    setJobDescription={setNewRecruitmentDesc}
-                    onSkillsClassified={setClassifiedSkills} 
-                  />
                   <DialogFooter>
                     <Button type="button" variant="secondary" onClick={() => setOpenNewRecruitmentDialog(false)}>Cancel</Button>
                     <Button type="submit" onClick={handleCreateRecruitment}>Create</Button>
@@ -186,7 +238,7 @@ export default function AdminDashboard() {
                     <TableRow key={r.id}>
                       <TableCell className="font-medium">{r.title}</TableCell>
                       <TableCell>{r.department}</TableCell>
-                      <TableCell>{r.closingDate}</TableCell>
+                      <TableCell>{new Date(r.closingDate).toLocaleDateString()}</TableCell>
                       <TableCell><Badge variant={r.status === 'open' ? 'default' : 'secondary'}>{r.status}</Badge></TableCell>
                       <TableCell className="text-right">
                         <Button asChild variant="outline" size="sm">
@@ -225,10 +277,10 @@ export default function AdminDashboard() {
                     <TableRow key={app.id}>
                       <TableCell className="font-medium">{app.applicantName}</TableCell>
                       <TableCell>{app.recruitmentTitle}</TableCell>
-                      <TableCell>{app.submittedDate}</TableCell>
+                      <TableCell>{new Date(app.submittedDate).toLocaleDateString()}</TableCell>
                       <TableCell><Badge variant="outline">{app.status}</Badge></TableCell>
                        <TableCell className="text-right">
-                        <Select defaultValue={app.status}>
+                        <Select onValueChange={(value) => handleApplicationStatusChange(app.id, value as Application['status'])} defaultValue={app.status}>
                            <SelectTrigger className="w-[120px]">
                             <SelectValue placeholder="Update..." />
                           </SelectTrigger>
@@ -272,7 +324,7 @@ export default function AdminDashboard() {
                       <TableCell className="font-medium">{p.staffName}</TableCell>
                       <TableCell>{p.currentPosition}</TableCell>
                       <TableCell>{p.newPosition}</TableCell>
-                      <TableCell>{p.requestDate}</TableCell>
+                      <TableCell>{new Date(p.requestDate).toLocaleDateString()}</TableCell>
                       <TableCell><Badge variant="outline">{p.status}</Badge></TableCell>
                       <TableCell className="text-right">
                          <Button asChild variant="outline" size="sm">

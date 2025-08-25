@@ -1,12 +1,24 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { recruitments } from "@/lib/data";
-import { ArrowRight, Briefcase, MapPin, University } from "lucide-react";
+import { ArrowRight, University } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { fetchRecruitments } from "@/lib/api";
+import type { Recruitment } from "@/lib/types";
 
 export default function Home() {
-  const latestRecruitments = recruitments.slice(0, 3);
+  const [latestRecruitments, setLatestRecruitments] = useState<Recruitment[]>([]);
+
+  useEffect(() => {
+    async function loadRecruitments() {
+      const allRecruitments = await fetchRecruitments();
+      setLatestRecruitments(allRecruitments.filter(r => r.status === 'open').slice(0, 3));
+    }
+    loadRecruitments();
+  }, []);
 
   return (
     <div className="flex flex-col min-h-[100dvh]">
@@ -111,7 +123,7 @@ export default function Home() {
                 </CardContent>
                 <CardFooter className="flex justify-between items-center">
                    <div className="text-sm text-muted-foreground">
-                     Closing: {job.closingDate}
+                     Closing: {new Date(job.closingDate).toLocaleDateString()}
                    </div>
                   <Button asChild variant="default">
                     <Link href={`/recruitments/${job.id}`}>

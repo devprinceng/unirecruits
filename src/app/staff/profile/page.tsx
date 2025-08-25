@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { updateUserProfile } from "@/lib/api";
 
 export default function StaffProfilePage() {
   const { user, loading, updateUser } = useAuth();
@@ -43,27 +44,31 @@ export default function StaffProfilePage() {
     });
   };
 
-  const handleProfileUpdate = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!user) return;
     setIsSaving(true);
     
-    // In a real app, you would send this to an API.
-    const updatedUser = { ...user, ...formData } as User;
-    
-    setTimeout(() => {
+    try {
+        const updatedUser = await updateUserProfile(user.id, formData);
         updateUser(updatedUser);
-        console.log("Updated user profile:", updatedUser);
-
         toast({
             title: "Profile Updated",
             description: "Your profile information has been successfully updated.",
         });
+    } catch (error) {
+         toast({
+            title: "Error",
+            description: "Failed to update profile.",
+            variant: 'destructive'
+        });
+    } finally {
         setIsSaving(false);
-    }, 1000);
+    }
   };
   
   const getInitials = (firstName: string = '', lastName: string = '') => {
-    return `${firstName[0] || ''}${lastName[0] || ''}`;
+    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`;
   }
 
   if (loading || !user || user.role !== 'staff') {

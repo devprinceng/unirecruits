@@ -1,7 +1,6 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { recruitments } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,25 +8,63 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Calendar, CheckCircle, University } from 'lucide-react';
+import { fetchRecruitmentById, createApplication } from '@/lib/api';
+import type { Recruitment } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 export default function RecruitmentDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { toast } = useToast();
   const id = params.id as string;
-  const recruitment = recruitments.find((r) => r.id === id);
+  
+  const [recruitment, setRecruitment] = useState<Recruitment | null>(null);
+  const [loading, setLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [applicantName, setApplicantName] = useState('');
+  const [applicantEmail, setApplicantEmail] = useState('');
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    async function loadRecruitment() {
+      try {
+        const { recruitment } = await fetchRecruitmentById(id);
+        setRecruitment(recruitment);
+      } catch (error) {
+         toast({ title: "Error", description: "Could not load recruitment details.", variant: "destructive" });
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (id) {
+      loadRecruitment();
+    }
+  }, [id, toast]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!recruitment) return;
+
     setIsSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+        await createApplication({
+            recruitmentId: recruitment.id,
+            recruitmentTitle: recruitment.title,
+            applicantName,
+            applicantEmail,
+        });
         setSubmitted(true);
+    } catch (error) {
+        toast({ title: "Error", description: "Failed to submit application.", variant: "destructive" });
+    } finally {
         setIsSubmitting(false);
-    }, 1500);
+    }
   };
+  
+  if (loading) {
+     return <div className="container mx-auto px-4 py-12 md:px-6 text-center">Loading...</div>;
+  }
 
   if (!recruitment) {
     return (
@@ -89,11 +126,11 @@ export default function RecruitmentDetailPage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" placeholder="John Doe" required />
+                    <Input id="name" placeholder="John Doe" required value={applicantName} onChange={e => setApplicantName(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" type="email" placeholder="john.doe@example.com" required />
+                    <Input id="email" type="email" placeholder="john.doe@example.com" required value={applicantEmail} onChange={e => setApplicantEmail(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="resume">Resume/CV</Label>

@@ -8,17 +8,18 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { promotions } from "@/lib/data";
 import type { Promotion } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { fetchPromotionsByStaffId, createPromotionRequest } from "@/lib/api";
 
 export default function StaffDashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
-
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  
   useEffect(() => {
     setIsClient(true);
     if (!loading && (!user || user.role !== 'staff')) {
@@ -26,24 +27,42 @@ export default function StaffDashboard() {
     }
   }, [user, loading, router]);
   
-  const handlePromotionRequest = (e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    async function loadPromotions() {
+      if (user?.id) {
+        setPromotions(await fetchPromotionsByStaffId(user.id));
+      }
+    }
+    loadPromotions();
+  }, [user?.id]);
+  
+  const handlePromotionRequest = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!user) return;
+    
     const formData = new FormData(e.currentTarget);
     const newPosition = formData.get('newPosition') as string;
 
-    // In a real app, you would send this to an API.
-    console.log({
-        staffId: user?.id,
-        currentPosition: user?.designation,
-        newPosition
-    });
-
-    toast({
-        title: "Request Submitted",
-        description: "Your promotion request has been submitted for review.",
-    });
-
-    e.currentTarget.reset();
+    try {
+        const newPromotion = await createPromotionRequest({
+            staffId: user.id,
+            staffName: `${user.firstName} ${user.lastName}`,
+            currentPosition: user.designation,
+            newPosition
+        });
+        setPromotions(prev => [newPromotion, ...prev]);
+        toast({
+            title: "Request Submitted",
+            description: "Your promotion request has been submitted for review.",
+        });
+        e.currentTarget.reset();
+    } catch (error) {
+        toast({
+            title: "Error",
+            description: "Failed to submit promotion request.",
+            variant: "destructive"
+        });
+    }
   };
 
   if (loading || !user || user.role !== 'staff') {
@@ -53,8 +72,6 @@ export default function StaffDashboard() {
   if (!isClient) {
     return null;
   }
-
-  const userPromotions = promotions.filter(p => p.staffId === user.id);
 
   return (
     <div className="container mx-auto px-4 py-12 md:px-6">
@@ -102,12 +119,12 @@ export default function StaffDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {userPromotions.length > 0 ? (
-                  userPromotions.map((p: Promotion) => (
+                {promotions.length > 0 ? (
+                  promotions.map((p: Promotion) => (
                     <TableRow key={p.id}>
                       <TableCell>{p.currentPosition}</TableCell>
                       <TableCell>{p.newPosition}</TableCell>
-                      <TableCell>{p.requestDate}</TableCell>
+                      <TableCell>{new Date(p.requestDate).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <Badge 
                            variant={

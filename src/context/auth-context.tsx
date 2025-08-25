@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import type { User } from '@/lib/types';
-import { users } from '@/lib/data';
+import { login as apiLogin } from '@/lib/api';
 
 interface AuthContextType {
   user: User | null;
@@ -34,22 +34,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<User | null> => {
     setLoading(true);
-    // Simulate API call
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const foundUser = users.find(u => u.email === email && u.password === password);
-        if (foundUser) {
-          const userToStore: Partial<User> = { ...foundUser };
-          delete userToStore.password;
-          setUser(userToStore as User);
-          sessionStorage.setItem('unirecruits_user', JSON.stringify(userToStore));
-          resolve(userToStore as User);
-        } else {
-          resolve(null);
-        }
+    try {
+      const loggedInUser = await apiLogin(email, password);
+      if (loggedInUser) {
+        const userToStore: Partial<User> = { ...loggedInUser };
+        delete userToStore.password;
+        setUser(userToStore as User);
+        sessionStorage.setItem('unirecruits_user', JSON.stringify(userToStore));
+        return userToStore as User;
+      }
+      return null;
+    } catch (error) {
+        console.error("Login failed", error);
+        return null;
+    } finally {
         setLoading(false);
-      }, 1000);
-    });
+    }
   };
 
   const logout = () => {
@@ -58,8 +58,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
   
   const updateUser = (updatedUser: User) => {
-    setUser(updatedUser);
-    sessionStorage.setItem('unirecruits_user', JSON.stringify(updatedUser));
+    const userToStore: Partial<User> = { ...updatedUser };
+    delete userToStore.password;
+    setUser(userToStore as User);
+    sessionStorage.setItem('unirecruits_user', JSON.stringify(userToStore));
   };
 
 

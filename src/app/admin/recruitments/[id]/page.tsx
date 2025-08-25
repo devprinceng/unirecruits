@@ -1,19 +1,65 @@
 "use client";
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { applications, recruitments } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Calendar, University, Users, FileText, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Calendar, University, Users, FileText, CheckCircle, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { fetchRecruitmentById, updateApplicationStatus } from '@/lib/api';
+import type { Recruitment, Application } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+
 
 export default function AdminRecruitmentDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { toast } = useToast();
   const id = params.id as string;
-  const recruitment = recruitments.find((r) => r.id === id);
-  const relevantApplications = applications.filter(a => a.recruitmentId === id);
+  
+  const [recruitment, setRecruitment] = useState<Recruitment | null>(null);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadRecruitment() {
+      try {
+        const { recruitment, applications } = await fetchRecruitmentById(id);
+        setRecruitment(recruitment);
+        setApplications(applications);
+      } catch (error) {
+         toast({ title: "Error", description: "Could not load recruitment details.", variant: "destructive" });
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (id) {
+      loadRecruitment();
+    }
+  }, [id, toast]);
+  
+   const handleApplicationStatusChange = async (appId: string, status: Application['status']) => {
+    try {
+        await updateApplicationStatus(appId, status);
+        setApplications(prev => prev.map(app => app.id === appId ? {...app, status} : app));
+        toast({
+            title: "Status Updated",
+            description: "Application status has been updated.",
+        });
+    } catch (error) {
+        toast({
+            title: "Error",
+            description: "Failed to update status.",
+            variant: "destructive"
+        });
+    }
+  };
+
+
+  if (loading) {
+     return <div className="container mx-auto px-4 py-12 md:px-6 text-center">Loading recruitment details...</div>;
+  }
 
   if (!recruitment) {
     return (
@@ -26,10 +72,10 @@ export default function AdminRecruitmentDetailPage() {
   }
   
   const stats = {
-    total: relevantApplications.length,
-    pending: relevantApplications.filter(a => a.status === 'pending').length,
-    reviewed: relevantApplications.filter(a => a.status === 'reviewed').length,
-    hired: relevantApplications.filter(a => a.status === 'hired').length,
+    total: applications.length,
+    pending: applications.filter(a => a.status === 'pending').length,
+    reviewed: applications.filter(a => a.status === 'reviewed').length,
+    hired: applications.filter(a => a.status === 'hired').length,
   };
 
   return (
@@ -82,13 +128,13 @@ export default function AdminRecruitmentDetailPage() {
                         </TableRow>
                         </TableHeader>
                         <TableBody>
-                        {relevantApplications.map((app) => (
+                        {applications.map((app) => (
                             <TableRow key={app.id}>
                             <TableCell className="font-medium">{app.applicantName}</TableCell>
-                            <TableCell>{app.submittedDate}</TableCell>
+                            <TableCell>{new Date(app.submittedDate).toLocaleDateString()}</TableCell>
                             <TableCell><Badge variant="outline">{app.status}</Badge></TableCell>
                             <TableCell className="text-right">
-                                <Select defaultValue={app.status}>
+                                <Select onValueChange={(value) => handleApplicationStatusChange(app.id, value as Application['status'])} defaultValue={app.status}>
                                 <SelectTrigger className="w-[120px]">
                                     <SelectValue placeholder="Update..." />
                                 </SelectTrigger>
