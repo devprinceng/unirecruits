@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<User | null>;
   logout: () => void;
+  updateUser: (user: User) => void;
   loading: boolean;
 }
 
@@ -38,11 +39,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setTimeout(() => {
         const foundUser = users.find(u => u.email === email && u.password === password);
         if (foundUser) {
-          const userToStore = { ...foundUser };
+          const userToStore: Partial<User> = { ...foundUser };
           delete userToStore.password;
-          setUser(userToStore);
+          setUser(userToStore as User);
           sessionStorage.setItem('unirecruits_user', JSON.stringify(userToStore));
-          resolve(userToStore);
+          resolve(userToStore as User);
         } else {
           resolve(null);
         }
@@ -55,9 +56,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     sessionStorage.removeItem('unirecruits_user');
   };
+  
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+    sessionStorage.setItem('unirecruits_user', JSON.stringify(updatedUser));
+  };
+
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

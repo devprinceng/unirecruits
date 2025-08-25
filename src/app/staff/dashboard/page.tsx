@@ -29,13 +29,12 @@ export default function StaffDashboard() {
   const handlePromotionRequest = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const currentPosition = formData.get('currentPosition') as string;
     const newPosition = formData.get('newPosition') as string;
 
     // In a real app, you would send this to an API.
     console.log({
         staffId: user?.id,
-        currentPosition,
+        currentPosition: user?.designation,
         newPosition
     });
 
@@ -61,7 +60,7 @@ export default function StaffDashboard() {
     <div className="container mx-auto px-4 py-12 md:px-6">
       <header className="mb-8">
         <h1 className="text-3xl font-bold">Staff Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back, {user.name}.</p>
+        <p className="text-muted-foreground">Welcome back, {user.firstName}.</p>
       </header>
       
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -74,7 +73,7 @@ export default function StaffDashboard() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="currentPosition">Current Position</Label>
-                <Input id="currentPosition" name="currentPosition" placeholder="e.g., Assistant Professor" required />
+                <Input id="currentPosition" name="currentPosition" value={user.designation} disabled />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="newPosition">Requested New Position</Label>

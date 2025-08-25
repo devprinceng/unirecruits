@@ -1,10 +1,62 @@
 import type { User, Recruitment, Application, Promotion } from './types';
 
 export const users: User[] = [
-  { id: '1', name: 'Admin User', email: 'admin@unirecruits.com', role: 'admin', password: 'password' },
-  { id: '2', name: 'Staff User', email: 'staff@unirecruits.com', role: 'staff', password: 'password' },
-  { id: '3', name: 'Dr. Evelyn Reed', email: 'e.reed@unirecruits.com', role: 'staff', password: 'password' },
-  { id: '4', name: 'Prof. Samuel Grant', email: 's.grant@unirecruits.com', role: 'staff', password: 'password' },
+  { 
+    id: '1', 
+    firstName: 'Admin',
+    lastName: 'User',
+    email: 'admin@unirecruits.com', 
+    phone: '123-456-7890',
+    department: 'Administration',
+    designation: 'System Administrator',
+    role: 'admin', 
+    dateOfEmployment: '2020-01-15',
+    promotionStatus: 'Top Level',
+    currentLevel: 'N/A',
+    password: 'password' 
+  },
+  { 
+    id: '2', 
+    firstName: 'Staff',
+    lastName: 'User',
+    email: 'staff@unirecruits.com', 
+    phone: '123-456-7891',
+    department: 'Library',
+    designation: 'Librarian',
+    role: 'staff', 
+    dateOfEmployment: '2022-03-10',
+    promotionStatus: 'Eligible',
+    currentLevel: 'Level 8',
+    password: 'password'
+  },
+  { 
+    id: '3',
+    firstName: 'Evelyn', 
+    lastName: 'Reed',
+    email: 'e.reed@unirecruits.com', 
+    phone: '123-456-7892',
+    department: 'Computer Science',
+    designation: 'Full Professor',
+    role: 'staff', 
+    dateOfEmployment: '2015-08-20',
+    promotionStatus: 'Promoted',
+    currentLevel: 'Level 15',
+    password: 'password'
+  },
+  { 
+    id: '4', 
+    firstName: 'Samuel',
+    lastName: 'Grant',
+    email: 's.grant@unirecruits.com', 
+    phone: '123-456-7893',
+    department: 'History',
+    designation: 'Associate Professor',
+    role: 'staff', 
+    dateOfEmployment: '2018-06-01',
+    promotionStatus: 'Eligible',
+    currentLevel: 'Level 12',
+    password: 'password'
+  },
 ];
 
 export const recruitments: Recruitment[] = [

@@ -28,26 +28,27 @@ export function UserNav() {
     return null;
   }
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('');
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName[0]}${lastName[0]}`;
   }
 
   const dashboardUrl = user.role === 'admin' ? '/admin/dashboard' : '/staff/dashboard';
+  const profileUrl = user.role === 'staff' ? '/staff/profile' : '#';
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png`} alt={user.name} />
-            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+            <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png`} alt={`${user.firstName} ${user.lastName}`} />
+            <AvatarFallback>{getInitials(user.firstName, user.lastName)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.name}</p>
+            <p className="text-sm font-medium leading-none">{user.firstName} {user.lastName}</p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
             </p>
@@ -58,9 +59,11 @@ export function UserNav() {
           <DropdownMenuItem asChild>
              <Link href={dashboardUrl}>Dashboard</Link>
           </DropdownMenuItem>
-          <DropdownMenuItem disabled>
-            Profile
-          </DropdownMenuItem>
+           {user.role === 'staff' && (
+            <DropdownMenuItem asChild>
+              <Link href={profileUrl}>Profile</Link>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>

@@ -1,8 +1,15 @@
 export type User = {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
+  phone: string;
+  department: string;
+  designation: string;
   role: 'admin' | 'staff';
+  dateOfEmployment: string;
+  promotionStatus: 'Eligible' | 'Promoted' | 'Not Eligible' | 'Top Level';
+  currentLevel: string;
   password?: string;
 };
 
