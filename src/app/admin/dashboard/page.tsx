@@ -17,6 +17,7 @@ import { PlusCircle, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { fetchRecruitments, fetchApplications, fetchPromotions, fetchUsers, createRecruitment, createUser, updateApplicationStatus } from "@/lib/api";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export default function AdminDashboard() {
   const { user, loading } = useAuth();
@@ -52,6 +53,7 @@ export default function AdminDashboard() {
     dateOfEmployment: '',
     promotionStatus: 'Eligible',
     currentLevel: '',
+    resumeUrl: ''
   });
 
   useEffect(() => {
@@ -115,6 +117,14 @@ export default function AdminDashboard() {
   }
 
   const handleAddStaff = async () => {
+    // In a real app, you would handle file uploads to a server/storage
+    // and get a URL back. For now, we'll simulate this.
+    const resumeInput = document.getElementById('resumeUrl') as HTMLInputElement;
+    if (resumeInput.files && resumeInput.files[0]) {
+        const fileName = resumeInput.files[0].name;
+        newStaff.resumeUrl = `/resumes/${fileName}`; // Mock URL
+    }
+
     try {
         const created = await createUser(newStaff);
         setUsers(prev => [created, ...prev]);
@@ -127,7 +137,7 @@ export default function AdminDashboard() {
         setNewStaff({
             firstName: '', lastName: '', email: '', password: '', phone: '',
             department: '', designation: '', role: 'staff', dateOfEmployment: '',
-            promotionStatus: 'Eligible', currentLevel: '',
+            promotionStatus: 'Eligible', currentLevel: '', resumeUrl: '',
         });
     } catch (error) {
          toast({
@@ -172,12 +182,16 @@ export default function AdminDashboard() {
       </header>
 
       <Tabs defaultValue="recruitments">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="recruitments">Recruitments</TabsTrigger>
-          <TabsTrigger value="applications">Applications</TabsTrigger>
-          <TabsTrigger value="promotions">Promotions</TabsTrigger>
-          <TabsTrigger value="staff">Staff</TabsTrigger>
-        </TabsList>
+        <ScrollArea className="w-full whitespace-nowrap">
+          <TabsList className="grid w-full grid-cols-4 min-w-[600px]">
+            <TabsTrigger value="recruitments">Recruitments</TabsTrigger>
+            <TabsTrigger value="applications">Applications</TabsTrigger>
+            <TabsTrigger value="promotions">Promotions</TabsTrigger>
+            <TabsTrigger value="staff">Staff</TabsTrigger>
+          </TabsList>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+
 
         <TabsContent value="recruitments">
           <Card>
@@ -417,6 +431,11 @@ export default function AdminDashboard() {
                                         <SelectItem value="Top Level">Top Level</SelectItem>
                                     </SelectContent>
                                 </Select>
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor="resumeUrl">Resume/CV</Label>
+                                <Input id="resumeUrl" type="file" />
+                                <p className="text-xs text-muted-foreground">Upload resume in PDF format.</p>
                             </div>
                         </div>
                         <DialogFooter>

@@ -13,7 +13,8 @@ export const users: User[] = [
     dateOfEmployment: '2020-01-15',
     promotionStatus: 'Top Level',
     currentLevel: 'N/A',
-    password: 'password' 
+    password: 'password' ,
+    resumeUrl: '',
   },
   { 
     id: '2', 
@@ -27,7 +28,8 @@ export const users: User[] = [
     dateOfEmployment: '2022-03-10',
     promotionStatus: 'Eligible',
     currentLevel: 'Level 8',
-    password: 'password'
+    password: 'password',
+    resumeUrl: '/resumes/staff-user.pdf',
   },
   { 
     id: '3',
@@ -41,7 +43,8 @@ export const users: User[] = [
     dateOfEmployment: '2015-08-20',
     promotionStatus: 'Promoted',
     currentLevel: 'Level 15',
-    password: 'password'
+    password: 'password',
+    resumeUrl: '/resumes/evelyn-reed.pdf',
   },
   { 
     id: '4', 
@@ -55,7 +58,8 @@ export const users: User[] = [
     dateOfEmployment: '2018-06-01',
     promotionStatus: 'Eligible',
     currentLevel: 'Level 12',
-    password: 'password'
+    password: 'password',
+    resumeUrl: '/resumes/samuel-grant.pdf',
   },
 ];
 

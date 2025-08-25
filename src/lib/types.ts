@@ -11,6 +11,7 @@ export type User = {
   promotionStatus: 'Eligible' | 'Promoted' | 'Not Eligible' | 'Top Level';
   currentLevel: string;
   password?: string;
+  resumeUrl?: string;
 };
 
 export type Recruitment = {

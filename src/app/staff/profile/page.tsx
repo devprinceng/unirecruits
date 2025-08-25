@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { User } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { updateUserProfile } from "@/lib/api";
+import { Download, FileText } from "lucide-react";
+import Link from "next/link";
 
 export default function StaffProfilePage() {
   const { user, loading, updateUser } = useAuth();
@@ -32,6 +34,7 @@ export default function StaffProfilePage() {
             lastName: user.lastName,
             email: user.email,
             phone: user.phone,
+            resumeUrl: user.resumeUrl,
         });
       }
     }
@@ -43,6 +46,19 @@ export default function StaffProfilePage() {
         [e.target.id]: e.target.value
     });
   };
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      // In a real app, you would upload this file and get a URL.
+      // For this mock, we'll just store a fake path.
+      setFormData({
+        ...formData,
+        resumeUrl: `/resumes/${file.name}`
+      });
+    }
+  };
+
 
   const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -128,6 +144,26 @@ export default function StaffProfilePage() {
              <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm New Password</Label>
                 <Input id="confirmPassword" type="password" placeholder="Confirm new password" />
+            </div>
+            <div className="md:col-span-2 space-y-2">
+                <Label htmlFor="resumeUrl">Resume/CV</Label>
+                {user.resumeUrl ? (
+                    <div className="flex items-center justify-between p-2 border rounded-md">
+                        <div className="flex items-center gap-2">
+                            <FileText className="h-5 w-5 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground truncate max-w-[200px]">{user.resumeUrl.split('/').pop()}</span>
+                        </div>
+                        <Button variant="outline" size="sm" asChild>
+                           <Link href={user.resumeUrl} target="_blank" download>
+                             <Download className="mr-2 h-4 w-4" /> Download
+                           </Link>
+                        </Button>
+                    </div>
+                ): (
+                   <p className="text-sm text-muted-foreground">No resume on file.</p>
+                )}
+                 <Input id="resumeUrl" type="file" onChange={handleFileChange} className="mt-2" />
+                 <p className="text-xs text-muted-foreground">Upload a new resume to replace the current one.</p>
             </div>
           </CardContent>
           <CardFooter className="justify-end">
