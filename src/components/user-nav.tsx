@@ -28,8 +28,11 @@ export function UserNav() {
     return null;
   }
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName[0]}${lastName[0]}`;
+  const getInitials = (firstName?: string, lastName?: string) => {
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`;
+    }
+    return 'U';
   }
 
   const dashboardUrl = user.role === 'admin' ? '/admin/dashboard' : '/staff/dashboard';
