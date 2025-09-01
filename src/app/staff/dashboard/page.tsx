@@ -30,7 +30,9 @@ export default function StaffDashboard() {
   useEffect(() => {
     async function loadPromotions() {
       if (user?.id) {
-        setPromotions(await fetchPromotionsByStaffId(user.id));
+        let promotions = await fetchPromotionsByStaffId(user.id);
+        console.log(promotions);
+        setPromotions(promotions);
       }
     }
     loadPromotions();
@@ -47,7 +49,7 @@ export default function StaffDashboard() {
         const newPromotion = await createPromotionRequest({
             staffId: user.id,
             staffName: `${user.firstName} ${user.lastName}`,
-            currentPosition: user.designation,
+            currentPosition: user.designation.split('/')[0].trim(),
             newPosition
         });
         setPromotions(prev => [newPromotion, ...prev]);
