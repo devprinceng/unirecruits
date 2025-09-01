@@ -32,25 +32,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
-  const login = async (email: string, password: string): Promise<User | null> => {
+  const login = async (
+    email: string,
+    password: string
+  ): Promise<{ user: User; token: string } | null> => {
     setLoading(true);
     try {
-      const loggedInUser = await apiLogin(email, password);
-      if (loggedInUser) {
-        const userToStore: Partial<User> = { ...loggedInUser };
+      const response = await apiLogin(email, password); 
+  
+      if (response?.user && response?.token) {
+        const userToStore: Partial<User> = { ...response.user };
         delete userToStore.password;
+  
         setUser(userToStore as User);
-        sessionStorage.setItem('unirecruits_user', JSON.stringify(userToStore));
-        return userToStore as User;
+        sessionStorage.setItem("unirecruits_user", JSON.stringify(userToStore));
+        sessionStorage.setItem("unirecruits_token", response.token);
+  
+        return { user: userToStore as User, token: response.token };
       }
+  
       return null;
     } catch (error) {
-        console.error("Login failed", error);
-        return null;
+      console.error("Login failed", error);
+      return null;
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
+  
 
   const logout = () => {
     setUser(null);

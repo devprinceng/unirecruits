@@ -1,6 +1,10 @@
 {
-  "name": "nextn",
-  "version": "0.1.0",
+  "name": "unirecruits-app",
+  "author": {
+    "name": "Prince Ojoi",
+    "email": "devprinceng@gmail.com"
+  },
+  "version": "1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
