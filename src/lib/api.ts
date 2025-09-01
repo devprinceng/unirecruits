@@ -83,7 +83,10 @@ export const login = async (
 // --- Users ---
 export const fetchUsers = async (): Promise<User[]> => {
   try {
-    return await apiFetch("/users");
+    const response = await apiFetch("/staffs");
+    const users = response.data;
+    console.log("users", users);
+    return users;
   } catch (error) {
     return users;
   }
@@ -111,8 +114,8 @@ export const updateUserProfile = async (
   userData: Partial<User>
 ): Promise<User> => {
   try {
-    return await apiFetch(`/users/${userId}`, {
-      method: "PATCH",
+    return await apiFetch(`/staffs/${userId}`, {
+      method: "PUT",
       body: JSON.stringify(userData),
     });
   } catch (error) {
@@ -128,7 +131,9 @@ export const updateUserProfile = async (
 // --- Recruitments ---
 export const fetchRecruitments = async (): Promise<Recruitment[]> => {
   try {
-    return await apiFetch("/recruitments");
+    const response = await apiFetch("/recruitments");
+
+    return response.data;
   } catch (error) {
     return recruitments;
   }
@@ -138,7 +143,8 @@ export const fetchRecruitmentById = async (
   id: string
 ): Promise<{ recruitment: Recruitment; applications: Application[] }> => {
   try {
-    return await apiFetch(`/recruitments/${id}`);
+    const recruitment = await apiFetch(`/recruitments/${id}`);
+    return recruitment.data;
   } catch (error) {
     const recruitment = recruitments.find((r) => r.id === id);
     if (!recruitment) throw new Error("Recruitment not found");
@@ -171,7 +177,9 @@ export const createRecruitment = async (
 // --- Applications ---
 export const fetchApplications = async (): Promise<Application[]> => {
   try {
-    return await apiFetch("/applications");
+    const applications = await apiFetch("/applications");
+    console.log(applications.data);
+    return applications.data;
   } catch (error) {
     return applications;
   }
@@ -219,7 +227,8 @@ export const updateApplicationStatus = async (
 // --- Promotions ---
 export const fetchPromotions = async (): Promise<Promotion[]> => {
   try {
-    return await apiFetch("/promotions");
+    const response = await apiFetch("/promotions");
+    return response.data;
   } catch (error) {
     return promotions;
   }

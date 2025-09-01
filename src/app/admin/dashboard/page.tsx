@@ -269,7 +269,7 @@ export default function AdminDashboard() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="applications">
+        {(applications.length > 0 ) && <TabsContent value="applications">
           <Card>
             <CardHeader>
               <CardTitle>Review Applications</CardTitle>
@@ -312,7 +312,7 @@ export default function AdminDashboard() {
               </Table>
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent>}
         
         <TabsContent value="promotions">
           <Card>
