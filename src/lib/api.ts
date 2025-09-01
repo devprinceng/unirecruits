@@ -229,8 +229,9 @@ export const fetchPromotionsByStaffId = async (
   staffId: string
 ): Promise<Promotion[]> => {
   try {
-    const promotions = await apiFetch(`/promotions/${staffId}`);
-    console.log(promotions);
+    const response = await apiFetch(`/promotions/staff/${staffId}`);
+    const promotions = response.data;
+
     return promotions;
   } catch (error) {
     return promotions.filter((p) => p.staffId === staffId);
@@ -255,7 +256,7 @@ export const fetchPromotionById = async (
 
 export const createPromotionRequest = async (
   requestData: Omit<Promotion, "id" | "requestDate" | "status">
-): Promise<Promotion> => {
+): Promise<any> => {
   try {
     const token = sessionStorage.getItem("unirecruits_token");
 

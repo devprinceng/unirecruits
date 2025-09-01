@@ -31,7 +31,6 @@ export default function StaffDashboard() {
     async function loadPromotions() {
       if (user?.id) {
         let promotions = await fetchPromotionsByStaffId(user.id);
-        console.log(promotions);
         setPromotions(promotions);
       }
     }
@@ -44,21 +43,25 @@ export default function StaffDashboard() {
     
     const formData = new FormData(e.currentTarget);
     const newPosition = formData.get('newPosition') as string;
-
+    //save form current state
+    const form = e.currentTarget; 
     try {
-        const newPromotion = await createPromotionRequest({
+        const response = await createPromotionRequest({
             staffId: user.id,
             staffName: `${user.firstName} ${user.lastName}`,
             currentPosition: user.designation.split('/')[0].trim(),
             newPosition
         });
+        const newPromotion = response.data
         setPromotions(prev => [newPromotion, ...prev]);
         toast({
-            title: "Request Submitted",
+            title: response.message,
             description: "Your promotion request has been submitted for review.",
         });
-        e.currentTarget.reset();
+      
+        form.reset()
     } catch (error) {
+      console.log(error)
         toast({
             title: "Error",
             description: "Failed to submit promotion request.",
@@ -83,6 +86,7 @@ export default function StaffDashboard() {
       </header>
       
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        {(promotions.length === 0 || promotions[0].status !== "pending") && (
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>Request a Promotion</CardTitle>
@@ -104,7 +108,7 @@ export default function StaffDashboard() {
             </CardFooter>
           </form>
         </Card>
-
+        )}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>My Promotion History</CardTitle>
@@ -120,7 +124,7 @@ export default function StaffDashboard() {
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              {/* <TableBody>
                 {promotions.length > 0 ? (
                   promotions.map((p: Promotion) => (
                     <TableRow key={p.id}>
@@ -145,7 +149,45 @@ export default function StaffDashboard() {
                     <TableCell colSpan={4} className="text-center">No promotion requests found.</TableCell>
                   </TableRow>
                 )}
-              </TableBody>
+              </TableBody> */}
+              <TableBody>
+  {promotions.length > 0 ? (
+    promotions.map((p: Promotion, idx) => {
+      const safeDate = p.requestDate
+        ? new Date(p.requestDate).toLocaleDateString()
+        : "N/A";
+
+      return (
+        <TableRow key={p.id ?? idx}>
+          <TableCell>{p.currentPosition}</TableCell>
+          <TableCell>{p.newPosition}</TableCell>
+          <TableCell>{safeDate}</TableCell>
+          <TableCell>
+            <Badge
+              variant={
+                p.status === "approved"
+                  ? "default"
+                  : p.status === "rejected"
+                  ? "destructive"
+                  : "secondary"
+              }
+              className={p.status === "approved" ? "bg-green-600" : ""}
+            >
+              {p.status ?? "pending"}
+            </Badge>
+          </TableCell>
+        </TableRow>
+      );
+    })
+  ) : (
+    <TableRow>
+      <TableCell colSpan={4} className="text-center">
+        No promotion requests found.
+      </TableCell>
+    </TableRow>
+  )}
+</TableBody>
+
             </Table>
           </CardContent>
         </Card>
