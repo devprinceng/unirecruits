@@ -6,9 +6,9 @@ export type User = {
   phone: string;
   department: string;
   designation: string;
-  role: 'admin' | 'staff';
+  role: "admin" | "staff";
   dateOfEmployment: string;
-  promotionStatus: 'Eligible' | 'Promoted' | 'Not Eligible' | 'Top Level';
+  promotionStatus: "Eligible" | "Promoted" | "Not Eligible" | "Top Level";
   currentLevel: string;
   password?: string;
   resumeUrl?: string;
@@ -21,7 +21,7 @@ export type Recruitment = {
   description: string;
   requirements: string[];
   closingDate: string;
-  status: 'open' | 'closed';
+  status: "open" | "closed";
 };
 
 export type Application = {
@@ -30,8 +30,9 @@ export type Application = {
   recruitmentTitle: string;
   applicantName: string;
   applicantEmail: string;
-  submittedDate: string;
-  status: 'pending' | 'reviewed' | 'rejected' | 'hired';
+  createdAt: string;
+  status: "pending" | "reviewed" | "rejected" | "hired";
+  recruitment?: Recruitment;
 };
 
 export type Promotion = {
@@ -41,5 +42,5 @@ export type Promotion = {
   currentPosition: string;
   newPosition: string;
   requestDate: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
 };

@@ -291,7 +291,8 @@ export default function AdminDashboard() {
                     <TableRow key={app.id}>
                       <TableCell className="font-medium">{app.applicantName}</TableCell>
                       <TableCell>{app.recruitmentTitle}</TableCell>
-                      <TableCell>{new Date(app.submittedDate).toLocaleDateString()}</TableCell>
+                      <TableCell>{app.recruitment?.title}</TableCell>
+                      <TableCell>{new Date(app.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell><Badge variant="outline">{app.status}</Badge></TableCell>
                        <TableCell className="text-right">
                         <Select onValueChange={(value) => handleApplicationStatusChange(app.id, value as Application['status'])} defaultValue={app.status}>

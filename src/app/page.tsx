@@ -15,6 +15,7 @@ export default function Home() {
   useEffect(() => {
     async function loadRecruitments() {
       const allRecruitments = await fetchRecruitments();
+      console.log("allRecruitments", allRecruitments);
       setLatestRecruitments(allRecruitments.filter(r => r.status === 'open').slice(0, 3));
     }
     loadRecruitments();

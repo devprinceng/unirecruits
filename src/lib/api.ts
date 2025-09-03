@@ -2,7 +2,7 @@ import { log } from "console";
 import { users, recruitments, applications, promotions } from "./data";
 import type { User, Recruitment, Application, Promotion } from "./types";
 
-const API_BASE_URL = "http://localhost:3000/api";
+const API_BASE_URL = "http://localhost:3005/api";
 
 async function apiFetch(endpoint: string, options: RequestInit = {}) {
   try {
@@ -31,26 +31,6 @@ async function apiFetch(endpoint: string, options: RequestInit = {}) {
   }
 }
 
-// --- Auth ---
-// export const login = async (
-//   email: string,
-//   password: string
-// ): Promise<User | null> => {
-//   try {
-//     const response = await apiFetch("/auth/login", {
-//       method: "POST",
-//       body: JSON.stringify({ email, password }),
-//     });
-//     const data = { ...response.data };
-//     return data;
-//   } catch (error) {
-//     const foundUser = users.find(
-//       (u) => u.email === email && u.password === password
-//     );
-//     console.log(foundUser);
-//     return foundUser || null;
-//   }
-// };
 export const login = async (
   email: string,
   password: string
@@ -85,7 +65,7 @@ export const fetchUsers = async (): Promise<User[]> => {
   try {
     const response = await apiFetch("/staffs");
     const users = response.data;
-    console.log("users", users);
+
     return users;
   } catch (error) {
     return users;
@@ -139,11 +119,10 @@ export const fetchRecruitments = async (): Promise<Recruitment[]> => {
   }
 };
 
-export const fetchRecruitmentById = async (
-  id: string
-): Promise<{ recruitment: Recruitment; applications: Application[] }> => {
+export const fetchRecruitmentById = async (id: string): Promise<any> => {
   try {
     const recruitment = await apiFetch(`/recruitments/${id}`);
+    console.log("recruitment: ", recruitment.data);
     return recruitment.data;
   } catch (error) {
     const recruitment = recruitments.find((r) => r.id === id);
@@ -152,6 +131,20 @@ export const fetchRecruitmentById = async (
       (a) => a.recruitmentId === id
     );
     return { recruitment, applications: relevantApplications };
+  }
+};
+
+export const fetchRecruitmentApplications = async (
+  id: string
+): Promise<any> => {
+  try {
+    const applications = await apiFetch(
+      `/admin/recruitments/${id}/applications`
+    );
+    return applications.data;
+  } catch (error) {
+    if (!applications)
+      throw new Error("applications are not found for this recruitment offer");
   }
 };
 
@@ -178,7 +171,7 @@ export const createRecruitment = async (
 export const fetchApplications = async (): Promise<Application[]> => {
   try {
     const applications = await apiFetch("/applications");
-    console.log(applications.data);
+    console.log("recruitment data", applications.data.recruitment);
     return applications.data;
   } catch (error) {
     return applications;

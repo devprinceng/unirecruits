@@ -29,8 +29,12 @@ export default function RecruitmentDetailPage() {
   useEffect(() => {
     async function loadRecruitment() {
       try {
-        const { recruitment } = await fetchRecruitmentById(id);
+        const recruitment  = await fetchRecruitmentById(id);
         setRecruitment(recruitment);
+        recruitment.requirements = typeof recruitment.requirements === "string"
+  ? JSON.parse(recruitment.requirements)
+  : recruitment.requirements;
+        
       } catch (error) {
          toast({ title: "Error", description: "Could not load recruitment details.", variant: "destructive" });
       } finally {

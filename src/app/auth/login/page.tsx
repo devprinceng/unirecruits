@@ -30,10 +30,12 @@ export default function LoginPage() {
     setError(null);
     setIsLoading(true);
 
-    const user = await login(email, password);
-
+    const response = await login(email, password);
+    const user = response?.user;
+  
     setIsLoading(false);
     if (user) {
+      console.log("user", user.role);
       const redirectPath = user.role === 'admin' ? '/admin/dashboard' : '/staff/dashboard';
       router.push(redirectPath);
     } else {

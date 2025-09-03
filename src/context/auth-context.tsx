@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (
     email: string,
     password: string
-  ): Promise<{ user: User; token: string } | null> => {
+  ): Promise<any> => {
     setLoading(true);
     try {
       const response = await apiLogin(email, password); 
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sessionStorage.setItem("unirecruits_user", JSON.stringify(userToStore));
         sessionStorage.setItem("unirecruits_token", response.token);
   
-        return { user: userToStore as User, token: response.token };
+        return { user: userToStore, token: response.token };
       }
   
       return null;
