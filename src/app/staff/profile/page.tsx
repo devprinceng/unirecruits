@@ -116,7 +116,7 @@ export default function StaffProfilePage() {
                 </CardDescription>
                 <div className="mt-2 text-sm text-muted-foreground">
                     <p>Current Level: {user.currentLevel}</p>
-                    <p>Date of Employment: {new Date(user.dateOfEmployment).toLocaleDateString()}</p>
+                    <p>Date of Employment: {user.dateOfEmployment ? new Date(user.dateOfEmployment).toLocaleDateString() : 'N/A'}</p>
                 </div>
             </div>
           </CardHeader>

@@ -1,20 +1,21 @@
-export type User = {
+export interface User {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
-  department: string;
-  designation: string;
-  role: "admin" | "staff";
-  dateOfEmployment: string;
-  promotionStatus: "Eligible" | "Promoted" | "Not Eligible" | "Top Level";
-  currentLevel: string;
-  password?: string;
+  phone?: string;
+  department?: string;
+  designation?: string;
+  role: "admin" | "staff" | "user";
+  dateOfEmployment?: Date;
+  promotionStatus?: string;
+  currentLevel?: string;
   resumeUrl?: string;
-};
+  createdAt: string;
+  updatedAt: string;
+}
 
-export type Recruitment = {
+export interface Recruitment {
   id: string;
   title: string;
   department: string;
@@ -22,26 +23,31 @@ export type Recruitment = {
   requirements: string[];
   closingDate: string;
   status: "open" | "closed";
-};
-
-export type Application = {
-  id?: string;
-  recruitmentId: string;
-  recruitmentTitle: string;
-  applicantName: string;
-  applicantEmail: string;
-  coverLetter?: string;
   createdAt: string;
-  status: "pending" | "reviewed" | "rejected" | "hired";
-  recruitment?: Recruitment[];
-};
+  updatedAt: string;
+}
 
-export type Promotion = {
+export interface Application {
+  id: string;
+  recruitmentId: string;
+  applicantName: string;
+  email: string;
+  resumeUrl: string;
+  coverLetter?: string;
+  status: "submitted" | "reviewed" | "shortlisted" | "rejected";
+  createdAt: string;
+  updatedAt: string;
+  recruitment?: Recruitment;
+}
+
+export interface Promotion {
   id: string;
   staffId: string;
   staffName: string;
   currentPosition: string;
   newPosition: string;
   requestDate: string;
-  status: "pending" | "approved" | "rejected";
-};
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  createdAt: string;
+  updatedAt: string;
+}

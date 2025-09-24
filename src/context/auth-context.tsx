@@ -2,11 +2,19 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import type { User } from '@/lib/types';
-import { login as apiLogin } from '@/lib/api';
+import { login as apiLogin, registerUser } from '@/lib/api';
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<User | null>;
+  register: (userData: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    role?: string;
+  }) => Promise<{ user: User; token: string } | null>;
   logout: () => void;
   updateUser: (user: User) => void;
   loading: boolean;
@@ -42,7 +50,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
       if (response?.user && response?.token) {
         const userToStore: Partial<User> = { ...response.user };
-        delete userToStore.password;
+        // Remove password from stored user data if it exists
+        if ('password' in userToStore) {
+          delete (userToStore as any).password;
+        }
   
         setUser(userToStore as User);
         sessionStorage.setItem("unirecruits_user", JSON.stringify(userToStore));
@@ -61,21 +72,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
   
 
+  const register = async (userData: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    role?: string;
+  }): Promise<{ user: User; token: string } | null> => {
+    setLoading(true);
+    try {
+      const response = await registerUser({
+        ...userData,
+        role: userData.role || 'user'
+      });
+
+      if (response?.user && response?.token) {
+        const userToStore: Partial<User> = { ...response.user };
+        // Remove password from stored user data if it exists
+        if ('password' in userToStore) {
+          delete (userToStore as any).password;
+        }
+
+        setUser(userToStore as User);
+        sessionStorage.setItem("unirecruits_user", JSON.stringify(userToStore));
+        sessionStorage.setItem("unirecruits_token", response.token);
+
+        return { user: userToStore as User, token: response.token };
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Registration failed", error);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     setUser(null);
     sessionStorage.removeItem('unirecruits_user');
+    sessionStorage.removeItem('unirecruits_token');
   };
   
   const updateUser = (updatedUser: User) => {
     const userToStore: Partial<User> = { ...updatedUser };
-    delete userToStore.password;
+    // Remove password from stored user data if it exists
+    if ('password' in userToStore) {
+      delete (userToStore as any).password;
+    }
     setUser(userToStore as User);
     sessionStorage.setItem('unirecruits_user', JSON.stringify(userToStore));
   };
 
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

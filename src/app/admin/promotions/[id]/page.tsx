@@ -3,11 +3,12 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Calendar, Briefcase, ArrowRight, TrendingUp, BadgeCheck, ShieldX } from 'lucide-react';
+import { Calendar, Briefcase, ArrowRight, TrendingUp, BadgeCheck, ShieldX, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { fetchPromotionById, updatePromotionStatus } from '@/lib/api';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { fetchPromotionById, updateAdminPromotion } from '@/lib/api';
 import type { Promotion, User } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,6 +21,7 @@ export default function AdminPromotionDetailPage() {
   const [promotion, setPromotion] = useState<Promotion | null>(null);
   const [staffMember, setStaffMember] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     async function loadPromotion() {
@@ -38,10 +40,32 @@ export default function AdminPromotionDetailPage() {
     }
   }, [id, toast]);
 
-  const handleStatusUpdate = async (status: 'approved' | 'rejected') => {
+  const handleStatusUpdate = async (status: 'PENDING' | 'APPROVED' | 'REJECTED') => {
     if (!promotion) return;
+    setIsUpdating(true);
     try {
-        const updatedPromotion = await updatePromotionStatus(promotion.id, status);
+        const updatedPromotion = await updateAdminPromotion(promotion.id, { status });
+        setPromotion(updatedPromotion);
+        toast({
+            title: `Status Updated`,
+            description: `The promotion request status has been changed to ${status}.`
+        });
+    } catch (error) {
+         toast({
+            title: "Error",
+            description: "Failed to update promotion status.",
+            variant: "destructive"
+        });
+    } finally {
+        setIsUpdating(false);
+    }
+  };
+
+  const handleQuickStatusUpdate = async (status: 'APPROVED' | 'REJECTED') => {
+    if (!promotion) return;
+    setIsUpdating(true);
+    try {
+        const updatedPromotion = await updateAdminPromotion(promotion.id, { status });
         setPromotion(updatedPromotion);
         toast({
             title: `Request ${status}`,
@@ -53,6 +77,8 @@ export default function AdminPromotionDetailPage() {
             description: "Failed to update promotion status.",
             variant: "destructive"
         });
+    } finally {
+        setIsUpdating(false);
     }
   };
 
@@ -88,10 +114,10 @@ export default function AdminPromotionDetailPage() {
             </CardDescription>
             <Badge 
                 variant={
-                promotion.status === 'approved' ? 'default' : 
-                promotion.status === 'rejected' ? 'destructive' : 'secondary'
+                promotion.status === 'APPROVED' ? 'default' : 
+                promotion.status === 'REJECTED' ? 'destructive' : 'secondary'
                 }
-                className={promotion.status === 'approved' ? 'bg-green-600' : ''}
+                className={promotion.status === 'APPROVED' ? 'bg-green-600' : ''}
             >
                 {promotion.status}
             </Badge>
@@ -114,7 +140,7 @@ export default function AdminPromotionDetailPage() {
                     <div className="space-y-2">
                         <h4 className="font-semibold text-lg">Employment Details</h4>
                          <p className="flex items-center"><Briefcase className="mr-2 h-4 w-4 text-muted-foreground"/> <strong>Department:</strong><span className="ml-2">{staffMember.department}</span></p>
-                        <p className="flex items-center"><Calendar className="mr-2 h-4 w-4 text-muted-foreground"/> <strong>Date of Employment:</strong><span className="ml-2">{new Date(staffMember.dateOfEmployment).toLocaleDateString()}</span></p>
+                        <p className="flex items-center"><Calendar className="mr-2 h-4 w-4 text-muted-foreground"/> <strong>Date of Employment:</strong><span className="ml-2">{staffMember.dateOfEmployment ? new Date(staffMember.dateOfEmployment).toLocaleDateString() : 'N/A'}</span></p>
                         <p className="flex items-center"><TrendingUp className="mr-2 h-4 w-4 text-muted-foreground"/> <strong>Current Level:</strong><span className="ml-2">{staffMember.currentLevel}</span></p>
                     </div>
                 </div>
@@ -140,11 +166,51 @@ export default function AdminPromotionDetailPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Status Management Section */}
+            <Separator />
+            <div className="space-y-4">
+                <h4 className="font-semibold text-lg flex items-center">
+                    <Settings className="mr-2 h-5 w-5" />
+                    Status Management
+                </h4>
+                <div className="flex items-center gap-4">
+                    <div className="flex-1">
+                        <label className="text-sm font-medium text-muted-foreground">Change Status:</label>
+                        <Select 
+                            value={promotion.status} 
+                            onValueChange={(value: 'PENDING' | 'APPROVED' | 'REJECTED') => handleStatusUpdate(value)}
+                            disabled={isUpdating}
+                        >
+                            <SelectTrigger className="w-full mt-1">
+                                <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="PENDING">Pending</SelectItem>
+                                <SelectItem value="APPROVED">Approved</SelectItem>
+                                <SelectItem value="REJECTED">Rejected</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+            </div>
         </CardContent>
-         {promotion.status === 'pending' && (
+         {promotion.status === 'PENDING' && (
             <CardFooter className="flex justify-end gap-2">
-                <Button variant="destructive" onClick={() => handleStatusUpdate('rejected')}><ShieldX className="mr-2"/> Reject</Button>
-                <Button className="bg-green-600 hover:bg-green-700" onClick={() => handleStatusUpdate('approved')}><BadgeCheck className="mr-2"/> Approve</Button>
+                <Button 
+                    variant="destructive" 
+                    onClick={() => handleQuickStatusUpdate('REJECTED')}
+                    disabled={isUpdating}
+                >
+                    <ShieldX className="mr-2"/> {isUpdating ? 'Updating...' : 'Reject'}
+                </Button>
+                <Button 
+                    className="bg-green-600 hover:bg-green-700" 
+                    onClick={() => handleQuickStatusUpdate('APPROVED')}
+                    disabled={isUpdating}
+                >
+                    <BadgeCheck className="mr-2"/> {isUpdating ? 'Updating...' : 'Approve'}
+                </Button>
             </CardFooter>
         )}
       </Card>

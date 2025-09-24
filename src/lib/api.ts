@@ -128,7 +128,17 @@ export const createRecruitment = async (
     method: "POST",
     body: JSON.stringify(recruitmentData),
   });
-  return response.data || response;
+  return response.data;
+};
+
+export const createAdminRecruitment = async (
+  recruitmentData: Omit<Recruitment, "id" | "status">
+): Promise<Recruitment> => {
+  const response = await apiFetch("/admin/recruitments", {
+    method: "POST",
+    body: JSON.stringify(recruitmentData),
+  });
+  return response.data;
 };
 
 // --- Applications ---
@@ -167,7 +177,7 @@ export const updateApplicationStatus = async (
   appId: string,
   status: Application["status"]
 ): Promise<Application> => {
-  return await apiFetch(`/applications/${appId}/status`, {
+  return await apiFetch(`/admin/applications/${appId}`, {
     method: "PATCH",
     body: JSON.stringify({ status }),
   });
@@ -189,8 +199,29 @@ export const fetchPromotionsByStaffId = async (
 export const fetchPromotionById = async (
   id: string
 ): Promise<{ promotion: Promotion; staffMember: User }> => {
-  const promotions = await apiFetch(`/promotions/${id}`);
-  return promotions;
+  const response = await apiFetch(`/admin/promotions/${id}`);
+  const promotionData = response.data || response;
+
+  // Create a mock staff member from the promotion data since API doesn't return separate staffMember
+  const staffMember: User = {
+    id: promotionData.staffId,
+    firstName: promotionData.staffName?.split(" ")[0] || "",
+    lastName: promotionData.staffName?.split(" ")[1] || "",
+    email: `${promotionData.staffName
+      ?.toLowerCase()
+      .replace(" ", ".")}@university.edu`,
+    role: "staff",
+    department: promotionData.currentPosition,
+    currentLevel: promotionData.currentPosition,
+    dateOfEmployment: new Date().toISOString(),
+    createdAt: promotionData.createdAt,
+    updatedAt: promotionData.updatedAt,
+  };
+
+  return {
+    promotion: promotionData,
+    staffMember: staffMember,
+  };
 };
 
 export const createPromotionRequest = async (
@@ -211,10 +242,198 @@ export const updatePromotionStatus = async (
   promoId: string,
   status: "approved" | "rejected"
 ): Promise<Promotion> => {
-  return await apiFetch(`/promotions/${promoId}/status`, {
+  return await apiFetch(`/admin/promotions/${promoId}`, {
     method: "PATCH",
     body: JSON.stringify({ status }),
   });
+};
+
+// --- Admin Operations ---
+
+// Admin Staff Management
+export const fetchAdminStaffs = async (): Promise<User[]> => {
+  const response = await apiFetch("/admin/staffs");
+  return response.data;
+};
+
+export const fetchAdminStaffById = async (id: string): Promise<User> => {
+  const response = await apiFetch(`/admin/staffs/${id}`);
+  return response.data;
+};
+
+export const updateAdminStaff = async (
+  id: string,
+  userData: Partial<User>
+): Promise<User> => {
+  const response = await apiFetch(`/admin/staffs/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(userData),
+  });
+  return response.data;
+};
+
+export const deleteAdminStaff = async (id: string): Promise<void> => {
+  await apiFetch(`/admin/staffs/${id}`, {
+    method: "DELETE",
+  });
+};
+
+// Admin Application Management
+export const fetchAdminApplications = async (): Promise<Application[]> => {
+  const response = await apiFetch("/admin/applications");
+  return response.data;
+};
+
+export const fetchAdminApplicationById = async (
+  id: string
+): Promise<Application> => {
+  const response = await apiFetch(`/admin/applications/${id}`);
+  return response.data;
+};
+
+export const updateAdminApplication = async (
+  id: string,
+  applicationData: Partial<Application>
+): Promise<Application> => {
+  const response = await apiFetch(`/admin/applications/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(applicationData),
+  });
+  return response.data;
+};
+
+export const deleteAdminApplication = async (id: string): Promise<void> => {
+  await apiFetch(`/admin/applications/${id}`, {
+    method: "DELETE",
+  });
+};
+
+// Admin Promotion Management
+export const fetchAdminPromotions = async (): Promise<Promotion[]> => {
+  const response = await apiFetch("/admin/promotions");
+  return response.data;
+};
+
+export const fetchAdminPromotionById = async (
+  id: string
+): Promise<Promotion> => {
+  const response = await apiFetch(`/admin/promotions/${id}`);
+  return response.data;
+};
+
+export const updateAdminPromotion = async (
+  id: string,
+  promotionData: Partial<Promotion>
+): Promise<Promotion> => {
+  const response = await apiFetch(`/admin/promotions/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(promotionData),
+  });
+  return response.data;
+};
+
+export const deleteAdminPromotion = async (id: string): Promise<void> => {
+  await apiFetch(`/admin/promotions/${id}`, {
+    method: "DELETE",
+  });
+};
+
+// Admin Recruitment Management
+export const fetchAdminRecruitments = async (): Promise<Recruitment[]> => {
+  const response = await apiFetch("/admin/recruitments");
+  return response.data;
+};
+
+export const updateAdminRecruitment = async (
+  id: string,
+  recruitmentData: Partial<Recruitment>
+): Promise<Recruitment> => {
+  const response = await apiFetch(`/admin/recruitments/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(recruitmentData),
+  });
+  return response.data;
+};
+
+export const deleteAdminRecruitment = async (id: string): Promise<void> => {
+  await apiFetch(`/admin/recruitments/${id}`, {
+    method: "DELETE",
+  });
+};
+
+// --- User Registration & Authentication ---
+export const registerUser = async (userData: {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  role?: string;
+}): Promise<{ user: User; token: string }> => {
+  const response = await apiFetch("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(userData),
+  });
+  return response.data;
+};
+
+// --- User Dashboard Operations ---
+export const fetchUserApplications = async (): Promise<Application[]> => {
+  const response = await apiFetch("/applications/user/my-applications");
+  return response.data;
+};
+
+// User profile management
+export const updateUser = async (
+  userId: string,
+  userData: Partial<User>
+): Promise<User> => {
+  // Simulate API call
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  // Find and update user in mock data
+  const userIndex = users.findIndex((u) => u.id === userId);
+  if (userIndex === -1) {
+    throw new Error("User not found");
+  }
+
+  const updatedUser = { ...users[userIndex], ...userData };
+  users[userIndex] = updatedUser;
+
+  return updatedUser;
+};
+
+export const fetchUserApplicationById = async (
+  id: string
+): Promise<Application> => {
+  const response = await apiFetch(`/applications/${id}`);
+  return response.data;
+};
+
+export const updateUserApplication = async (
+  id: string,
+  applicationData: Partial<Application>
+): Promise<Application> => {
+  const response = await apiFetch(`/applications/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(applicationData),
+  });
+  return response.data;
+};
+
+export const deleteUserApplication = async (id: string): Promise<void> => {
+  await apiFetch(`/applications/${id}`, {
+    method: "DELETE",
+  });
+};
+
+// --- Additional Admin Recruitment Applications ---
+export const fetchAdminRecruitmentApplications = async (
+  recruitmentId: string
+): Promise<Application[]> => {
+  const response = await apiFetch(
+    `/admin/recruitments/${recruitmentId}/applications`
+  );
+  return response.data;
 };
 
 // --- Dashboard Stats ---

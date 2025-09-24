@@ -83,9 +83,9 @@ export default function AdminRecruitmentDetailPage() {
   
   const stats = {
     total: applications.length,
-    pending: applications.filter(a => a.status === 'pending').length,
+    pending: applications.filter(a => a.status === 'submitted').length,
     reviewed: applications.filter(a => a.status === 'reviewed').length,
-    hired: applications.filter(a => a.status === 'hired').length,
+    hired: applications.filter(a => a.status === 'shortlisted').length,
   };
 
   return (

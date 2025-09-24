@@ -47,16 +47,16 @@ export default function AdminDashboard() {
   const [newRecruitmentReqs, setNewRecruitmentReqs] = useState('');
 
    // Form state for new staff
-  const [newStaff, setNewStaff] = useState<Partial<User>>({
+  const [newStaff, setNewStaff] = useState<Partial<User> & { password?: string }>({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
-    phone: '',
+    phone: '0000000000',
     department: '',
     designation: '',
     role: 'staff',
-    dateOfEmployment: '',
+    dateOfEmployment: new Date(),
     promotionStatus: 'Eligible',
     currentLevel: '',
     resumeUrl: ''
@@ -86,7 +86,11 @@ export default function AdminDashboard() {
 
   const handleAddStaffChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
-    setNewStaff(prev => ({ ...prev, [id]: value }));
+    if (id === 'dateOfEmployment') {
+      setNewStaff(prev => ({ ...prev, [id]: new Date(value) }));
+    } else {
+      setNewStaff(prev => ({ ...prev, [id]: value }));
+    }
   };
 
   const handleAddStaffSelectChange = (id: string, value: string) => {
@@ -100,7 +104,9 @@ export default function AdminDashboard() {
       department: newRecruitmentDept,
       description: newRecruitmentDesc,
       requirements: newRecruitmentReqs.split('\\n'),
-      closingDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0] // Default 30 days
+      closingDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0], // Default 30 days
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
     try {
@@ -144,9 +150,18 @@ export default function AdminDashboard() {
         setOpenAddStaffDialog(false);
         // Reset form
         setNewStaff({
-            firstName: '', lastName: '', email: '', password: '', phone: '',
-            department: '', designation: '', role: 'staff', dateOfEmployment: '',
-            promotionStatus: 'Eligible', currentLevel: '', resumeUrl: '',
+            firstName: '',
+            lastName: '',
+            email: '',
+            password: '',
+            phone: '0000000000',
+            department: '',
+            designation: '',
+            role: 'staff',
+            dateOfEmployment: new Date(),
+            promotionStatus: 'Eligible',
+            currentLevel: '',
+            resumeUrl: ''
         });
     } catch (error) {
          toast({
@@ -372,7 +387,7 @@ export default function AdminDashboard() {
                       <TableCell><Badge variant={r.status === 'open' ? 'default' : 'secondary'}>{r.status}</Badge></TableCell>
                       <TableCell className="text-right">
                         <Button asChild variant="outline" size="sm">
-                          <Link href={`/recruitments/${r.id}`}>
+                          <Link href={`/admin/recruitments/${r.id}`}>
                             <Eye className="mr-2 h-4 w-4" /> View
                           </Link>
                         </Button>
@@ -525,7 +540,7 @@ export default function AdminDashboard() {
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="dateOfEmployment">Date of Employment</Label>
-                                <Input id="dateOfEmployment" type="date" value={newStaff.dateOfEmployment} onChange={handleAddStaffChange} />
+                                <Input id="dateOfEmployment" type="date" value={newStaff.dateOfEmployment ? new Date(newStaff.dateOfEmployment).toISOString().split('T')[0] : ''} onChange={handleAddStaffChange} />
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="role">Role</Label>

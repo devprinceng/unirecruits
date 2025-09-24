@@ -49,8 +49,10 @@ export default function StaffDashboard() {
         const response = await createPromotionRequest({
             staffId: user.id,
             staffName: `${user.firstName} ${user.lastName}`,
-            currentPosition: user.designation.split('/')[0].trim(),
-            newPosition
+            currentPosition: user.designation?.split('/')[0].trim() || user.designation || 'N/A',
+            newPosition,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         });
         const newPromotion = response.data
         setPromotions(prev => [newPromotion, ...prev]);

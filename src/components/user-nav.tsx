@@ -35,8 +35,17 @@ export function UserNav() {
     return 'U';
   }
 
-  const dashboardUrl = user.role === 'admin' ? '/admin/dashboard' : '/staff/dashboard';
-  const profileUrl = user.role === 'staff' ? '/staff/profile' : '#';
+  const dashboardUrl = user.role === 'admin' 
+    ? '/admin/dashboard' 
+    : user.role === 'staff' 
+    ? '/staff/dashboard' 
+    : '/user/dashboard';
+  
+  const profileUrl = user.role === 'staff' 
+    ? '/staff/profile' 
+    : user.role === 'user' 
+    ? '/user/profile' 
+    : '#';
 
   return (
     <DropdownMenu>
