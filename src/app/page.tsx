@@ -44,7 +44,7 @@ export default function Home() {
               </div>
             </div>
             <Image
-              src="https://placehold.co/600x400.png"
+              src="/uploads/unicross.jpeg"
               width="600"
               height="400"
               alt="Hero"
@@ -68,7 +68,7 @@ export default function Home() {
           </div>
           <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-2 lg:gap-12">
             <Image
-              src="https://placehold.co/600x400.png"
+              src="/uploads/job1.jpeg"
               width="600"
               height="400"
               alt="About"
@@ -104,7 +104,7 @@ export default function Home() {
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
               <div className="inline-block rounded-lg bg-background px-3 py-1 text-sm">Latest Jobs</div>
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Join Our Team</h2>
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Join Our University Workforce</h2>
               <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                 Explore our latest job openings and find your place at our university.
               </p>

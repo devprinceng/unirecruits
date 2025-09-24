@@ -25,6 +25,8 @@ export default function RecruitmentDetailPage() {
 
   const [applicantName, setApplicantName] = useState('');
   const [applicantEmail, setApplicantEmail] = useState('');
+  const [resume, setResume] = useState<File | null>(null);
+  const [coverLetter, setCoverLetter] = useState('');
 
   useEffect(() => {
     async function loadRecruitment() {
@@ -32,11 +34,10 @@ export default function RecruitmentDetailPage() {
         const recruitment  = await fetchRecruitmentById(id);
         setRecruitment(recruitment);
         recruitment.requirements = typeof recruitment.requirements === "string"
-  ? JSON.parse(recruitment.requirements)
-  : recruitment.requirements;
-        
+          ? JSON.parse(recruitment.requirements)
+          : recruitment.requirements;
       } catch (error) {
-         toast({ title: "Error", description: "Could not load recruitment details.", variant: "destructive" });
+        toast({ title: "Error", description: "Could not load recruitment details.", variant: "destructive" });
       } finally {
         setLoading(false);
       }
@@ -52,22 +53,29 @@ export default function RecruitmentDetailPage() {
 
     setIsSubmitting(true);
     try {
-        await createApplication({
-            recruitmentId: recruitment.id,
-            recruitmentTitle: recruitment.title,
-            applicantName,
-            applicantEmail,
-        });
-        setSubmitted(true);
+      const formData = new FormData();
+      formData.append("recruitmentId", id);
+      formData.append("applicantName", applicantName);
+      formData.append("email", applicantEmail);
+      if (resume) {
+        formData.append("resume", resume);
+      }
+      if (coverLetter) {
+        formData.append("coverLetter", coverLetter);
+      }
+
+      await createApplication(formData);
+
+      setSubmitted(true);
     } catch (error) {
-        toast({ title: "Error", description: "Failed to submit application.", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to submit application.", variant: "destructive" });
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
   };
   
   if (loading) {
-     return <div className="container mx-auto px-4 py-12 md:px-6 text-center">Loading...</div>;
+    return <div className="container mx-auto px-4 py-12 md:px-6 text-center">Loading...</div>;
   }
 
   if (!recruitment) {
@@ -138,12 +146,12 @@ export default function RecruitmentDetailPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="resume">Resume/CV</Label>
-                    <Input id="resume" type="file" required />
+                    <Input id="resume" type="file" required onChange={e => setResume(e.target.files?.[0] || null)} />
                     <p className="text-xs text-muted-foreground">Please upload your resume in PDF format.</p>
                   </div>
-                   <div className="space-y-2">
+                  <div className="space-y-2">
                     <Label htmlFor="cover-letter">Cover Letter (Optional)</Label>
-                    <Textarea id="cover-letter" placeholder="Tell us why you are a good fit for this role..." />
+                    <Textarea id="cover-letter" placeholder="Tell us why you are a good fit for this role..." value={coverLetter} onChange={e => setCoverLetter(e.target.value)} />
                   </div>
                   <Button type="submit" className="w-full" disabled={isSubmitting}>
                     {isSubmitting ? 'Submitting...' : 'Submit Application'}

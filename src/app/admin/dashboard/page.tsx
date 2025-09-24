@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { fetchRecruitments, fetchApplications, fetchPromotions, fetchUsers, createRecruitment, createUser, updateApplicationStatus } from "@/lib/api";
+import { fetchRecruitments, fetchApplications, fetchPromotions, fetchUsers, createRecruitment, createUser, updateApplicationStatus, getStats } from "@/lib/api";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export default function AdminDashboard() {
@@ -33,6 +33,12 @@ export default function AdminDashboard() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [stats, setStats] = useState<{
+    promotions: number;
+    recruitments: number;
+    staffs: number;
+    applications: number;
+  } | null>(null);
 
   // Form state for new recruitment
   const [newRecruitmentTitle, setNewRecruitmentTitle] = useState('');
@@ -69,9 +75,12 @@ export default function AdminDashboard() {
         setApplications(await fetchApplications());
         setPromotions(await fetchPromotions());
         setUsers(await fetchUsers());
+        setStats(await getStats());
     }
+
     if(user?.role === 'admin') {
       loadData();
+      console.log("applications", applications);
     }
   }, [user]);
 
@@ -181,6 +190,113 @@ export default function AdminDashboard() {
         <p className="text-muted-foreground">Welcome, {user.firstName}. Manage UniRecruits system here.</p>
       </header>
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Staff</CardTitle>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              className="h-4 w-4 text-muted-foreground"
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="m22 21-3-3m0 0a5 5 0 1 0-7-7 5 5 0 0 0 7 7Z" />
+            </svg>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.staffs || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              Total staff members
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Applications</CardTitle>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              className="h-4 w-4 text-muted-foreground"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14,2 14,8 20,8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10,9 9,9 8,9" />
+            </svg>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.applications || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              Total applications received
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Recruitments</CardTitle>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              className="h-4 w-4 text-muted-foreground"
+            >
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+            </svg>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.recruitments || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              Active recruitment posts
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Promotion Requests</CardTitle>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              className="h-4 w-4 text-muted-foreground"
+            >
+              <path d="M12 2L2 7l10 5 10-5-10-5z" />
+              <path d="m2 17 10 5 10-5" />
+              <path d="m2 12 10 5 10-5" />
+            </svg>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.promotions || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              Pending promotion requests
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
       <Tabs defaultValue="recruitments">
         <ScrollArea className="w-full whitespace-nowrap">
           <TabsList className="grid w-full grid-cols-4 min-w-[600px]">
@@ -256,7 +372,7 @@ export default function AdminDashboard() {
                       <TableCell><Badge variant={r.status === 'open' ? 'default' : 'secondary'}>{r.status}</Badge></TableCell>
                       <TableCell className="text-right">
                         <Button asChild variant="outline" size="sm">
-                          <Link href={`/admin/recruitments/${r.id}`}>
+                          <Link href={`/recruitments/${r.id}`}>
                             <Eye className="mr-2 h-4 w-4" /> View
                           </Link>
                         </Button>
@@ -273,7 +389,7 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Review Applications</CardTitle>
-              <CardDescription>Review submitted applications for all job openings.</CardDescription>
+              <CardDescription>Review submitted applications for all Recruitments.</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -290,7 +406,7 @@ export default function AdminDashboard() {
                   {applications.map((app: Application) => (
                     <TableRow key={app.id}>
                       <TableCell className="font-medium">{app.applicantName}</TableCell>
-                      <TableCell>{app.recruitmentTitle}</TableCell>
+                      {/* <TableCell>{app.recruitmentTitle}</TableCell> */}
                       <TableCell>{app.recruitment?.title}</TableCell>
                       <TableCell>{new Date(app.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell><Badge variant="outline">{app.status}</Badge></TableCell>

@@ -25,14 +25,15 @@ export type Recruitment = {
 };
 
 export type Application = {
-  id: string;
+  id?: string;
   recruitmentId: string;
   recruitmentTitle: string;
   applicantName: string;
   applicantEmail: string;
+  coverLetter?: string;
   createdAt: string;
   status: "pending" | "reviewed" | "rejected" | "hired";
-  recruitment?: Recruitment;
+  recruitment?: Recruitment[];
 };
 
 export type Promotion = {
